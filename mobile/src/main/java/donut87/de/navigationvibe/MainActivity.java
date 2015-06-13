@@ -12,6 +12,8 @@ import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -36,6 +38,10 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
     private Location currentLocation;
     private Location currentGoalLocation;
     private TextView textView;
+    private Button leftButton;
+    private Button rightButton;
+    private Button buttonStop;
+    private TextView speedTextView;
     private String nodeId;
 
     public static final int CONNECTION_TIME_OUT_MS = 15000;
@@ -46,6 +52,45 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
         this.retrieveDeviceNode();
         setContentView(R.layout.activity_main);
         textView = (TextView) findViewById(R.id.textView);
+        speedTextView = (TextView) findViewById(R.id.speed_label);
+        leftButton = (Button) findViewById(R.id.button_left);
+        leftButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                double speed = Double.parseDouble(speedTextView.getText().toString());
+                if (speed == -1.0 || speed >= 1.0) {
+                    speed = 0.0;
+                }
+                else {
+                    speed += 0.1;
+                }
+                sendMessage("vibrate_left", "" + speed);
+                speedTextView.setText("" + speed);
+            }
+        });
+        rightButton = (Button) findViewById(R.id.button_right);
+        rightButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                double speed = Double.parseDouble(speedTextView.getText().toString());
+                if (speed == -1.0 || speed >= 1.0) {
+                    speed = 0.0;
+                }
+                else {
+                    speed += 0.1;
+                }
+                sendMessage("vibrate_right", "" + speed);
+                speedTextView.setText("" + speed);
+            }
+        });
+        buttonStop = (Button) findViewById(R.id.button_stop);
+        buttonStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendMessage("stop", "");
+                speedTextView.setText("-1.0");
+            }
+        });
         textView.setMovementMethod(new ScrollingMovementMethod());
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationListener = new LocationListener() {
@@ -82,7 +127,6 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
                 }
 
                 currentLocation = location;
-                sendMessage("Left");
             }
 
             @Override
@@ -112,11 +156,12 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
         if (currentLocation != null) {
             textView.setText("Your Location: " + currentLocation.getLatitude() + ", " + currentLocation.getLongitude() + "\n");
             Log.d("Location", "Cur Lat " + currentLocation.getLatitude() + "Cur Lon " + currentLocation.getLongitude());
-            handleNavigationSearchButton();
         }
         else {
+            textView.setText("Current Location Unknown\n");
             Log.d("Location", "Current Location Unknown");
         }
+        handleNavigationSearchButton();
     }
 
     public void handleNavigationSearchButton() {
@@ -198,17 +243,17 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
         }).start();
     }
 
-    private void sendMessage(final String message){
+    private void sendMessage(final String action, final String value){
         final GoogleApiClient client = getGoogleApiClient(this);
         if(this.nodeId != null){
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     client.blockingConnect(CONNECTION_TIME_OUT_MS, TimeUnit.MILLISECONDS);
-                    Wearable.MessageApi.sendMessage(client, nodeId, "/directionUpdate", message.getBytes());
+                    Wearable.MessageApi.sendMessage(client, nodeId, action, value.getBytes());
                     client.disconnect();
                 }
-            });
+            }).start();
         }
     }
 }

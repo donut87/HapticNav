@@ -23,9 +23,20 @@ public class ListenerService extends WearableListenerService {
 
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
-        if(messageEvent.getPath().equals("/directionUpdate")){
-            String message = new String(messageEvent.getData());
-            vibration.vibrate(0.1, Vibration.side.LEFT);
+        if(messageEvent.getPath().equals("vibrate_left")) {
+            String speedString = new String(messageEvent.getData());
+            double speedValue = Double.parseDouble(speedString);
+            vibration.stopVibrating();
+            vibration.vibrate(speedValue, Vibration.side.LEFT);
+        }
+        else if (messageEvent.getPath().equals("vibrate_right")) {
+            String speedString = new String(messageEvent.getData());
+            double speedValue = Double.parseDouble(speedString);
+            vibration.stopVibrating();
+            vibration.vibrate(speedValue, Vibration.side.RIGHT);
+        }
+        else if (messageEvent.getPath().equals("stop")) {
+            vibration.stopVibrating();
         }
     }
 }

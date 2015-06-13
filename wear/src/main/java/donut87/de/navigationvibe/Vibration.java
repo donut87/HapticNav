@@ -19,13 +19,9 @@ public class Vibration {
     }
 
     private Vibrator vibrator;
-    private ScheduledExecutorService service;
-    private ScheduledFuture<?> vibratorHandler;
 
     public Vibration(Vibrator vibe){
         this.vibrator = vibe;
-        this.service = Executors.newScheduledThreadPool(1);
-        this.vibratorHandler = null;
     }
 
     public void vibrate(double speed, side s){
@@ -35,30 +31,39 @@ public class Vibration {
         }
     }
 
-    private void vibrateLeft(double speed){
-        Runnable task = new Runnable() {
-            @Override
-            public void run() {
-                vibrator.vibrate(30);
-            }
-        };
-        this.vibratorHandler = service.scheduleAtFixedRate(task,0,100, TimeUnit.MILLISECONDS);
+    private void vibrateLeft(double speed) {
+        final long startDelay = 900L;
+        final long finalDelay = 100L;
+        final double delay = lerp(startDelay, finalDelay, speed);
+
+        long arr[] = {0L, 100L, (long)delay};
+        vibrator.vibrate(arr, 0);
     }
 
     private void vibrateRight(double speed){
-        Runnable task = new Runnable() {
-            @Override
-            public void run() {
-                vibrator.vibrate(70);
-            }
-        };
-        this.vibratorHandler = service.scheduleAtFixedRate(task,0,100, TimeUnit.MILLISECONDS);
+        final long startDelay = 750L;
+        final long finalDelay = 100L;
+        final double delay = lerp(startDelay, finalDelay, speed);
+
+        long arr[] = {0L, 50L, 50L, 50L, 50L, 50L, (long)delay};
+        vibrator.vibrate(arr, 0);
     }
 
-    public void stopVibrating(){
-        this.vibrator.cancel();
-        if(vibratorHandler != null)
-            vibratorHandler.cancel(true);
-        vibratorHandler = null;
+    public void stopVibrating() {
+        vibrator.cancel();
+    }
+
+    private double lerp(double a, double b, double t) {
+        return a + clamp(t, 0.0, 1.0) * (b - a);
+    }
+
+    private double clamp(double val, double min, double max) {
+        if (val > max) {
+            return max;
+        }
+        else if (val < min) {
+            return min;
+        }
+        return val;
     }
 }

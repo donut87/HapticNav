@@ -35,6 +35,7 @@ public class NavigatorActivity extends Activity {
         });
 
         Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        v.cancel();
         this.vibration = new Vibration(v);
     }
 }
