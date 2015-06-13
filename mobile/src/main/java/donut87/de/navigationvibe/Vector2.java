@@ -10,4 +10,21 @@ public class Vector2 {
         this.x = x;
         this.y = y;
     }
+
+    public Vector2 normalized() {
+
+        return new Vector2(this.x * 1.0 / this.length(), this.y * 1.0 / this.length());
+    }
+
+    public double length() {
+
+        return Math.sqrt(this.x * this.x + this.y * this.y);
+    }
+
+    /*
+    ccpNormalize(const CGPoint v)
+    {
+        return ccpMult(v, 1.0f/ccpLength(v));
+    }
+    */
 }
