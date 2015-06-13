@@ -2,16 +2,27 @@ package donut87.de.navigationvibe;
 
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import java.io.IOException;
+
 
 public class MainActivity extends ActionBarActivity {
+
+    private GoogleMapsClient client = new GoogleMapsClient();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        try {
+            client.getDirections("Hasenheide 48, Berlin, Germany", "Hasenheide 120, Berlin, Germany");
+        }
+        catch (IOException e) {
+            Log.e("Error", e.getMessage());
+        }
     }
 
 
