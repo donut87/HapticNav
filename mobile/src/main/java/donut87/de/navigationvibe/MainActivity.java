@@ -14,9 +14,18 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.games.internal.constants.Capability;
+import com.google.android.gms.wearable.Node;
+import com.google.android.gms.wearable.NodeApi;
+import com.google.android.gms.wearable.Wearable;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Vector;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 
 public class MainActivity extends ActionBarActivity implements IGoogleMapsClientHandler {
@@ -27,11 +36,14 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
     private Location currentLocation;
     private Location currentGoalLocation;
     private TextView textView;
+    private String nodeId;
+
+    public static final int CONNECTION_TIME_OUT_MS = 15000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        this.retrieveDeviceNode();
         setContentView(R.layout.activity_main);
         textView = (TextView) findViewById(R.id.textView);
         textView.setMovementMethod(new ScrollingMovementMethod());
@@ -70,6 +82,7 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
                 }
 
                 currentLocation = location;
+                sendMessage("Left");
             }
 
             @Override
@@ -160,6 +173,43 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private GoogleApiClient getGoogleApiClient(Context context) {
+        return new GoogleApiClient.Builder(context)
+                .addApi(Wearable.API)
+                .build();
+    }
+
+    private void retrieveDeviceNode() {
+        final GoogleApiClient client = getGoogleApiClient(this);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                client.blockingConnect(CONNECTION_TIME_OUT_MS, TimeUnit.MILLISECONDS);
+                NodeApi.GetConnectedNodesResult result =
+                        Wearable.NodeApi.getConnectedNodes(client).await();
+                List<Node> nodes = result.getNodes();
+                if (nodes.size() > 0) {
+                    MainActivity.this.nodeId = nodes.get(0).getId();
+                }
+                client.disconnect();
+            }
+        }).start();
+    }
+
+    private void sendMessage(final String message){
+        final GoogleApiClient client = getGoogleApiClient(this);
+        if(this.nodeId != null){
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    client.blockingConnect(CONNECTION_TIME_OUT_MS, TimeUnit.MILLISECONDS);
+                    Wearable.MessageApi.sendMessage(client, nodeId, "/directionUpdate", message.getBytes());
+                    client.disconnect();
+                }
+            });
+        }
     }
 }
 

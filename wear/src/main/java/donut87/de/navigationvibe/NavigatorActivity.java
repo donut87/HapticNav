@@ -9,9 +9,18 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.google.android.gms.wearable.MessageEvent;
+import com.google.android.gms.wearable.Node;
+import com.google.android.gms.wearable.Wearable;
+import com.google.android.gms.wearable.WearableListenerService;
+
+import donut87.de.navigationvibe.Vibration.side;
+
 public class NavigatorActivity extends Activity {
 
     private TextView mTextView;
+    private side theSide = side.LEFT;
+    private Vibration vibration;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,18 +35,6 @@ public class NavigatorActivity extends Activity {
         });
 
         Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-        final Vibration vibration = new Vibration(v);
-
-        final Button round_button = (Button) findViewById(R.id.button);
-        final Button rect_button = (Button) findViewById(R.id.button_click);
-
-        View.OnClickListener listener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                vibration.vibrate(0.1, Vibration.side.LEFT);
-            }
-        };
-        round_button.setOnClickListener(listener);
-
+        this.vibration = new Vibration(v);
     }
 }
