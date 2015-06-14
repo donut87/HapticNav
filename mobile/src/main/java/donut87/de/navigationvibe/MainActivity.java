@@ -1,6 +1,7 @@
 package donut87.de.navigationvibe;
 
 import android.content.Context;
+import android.content.Intent;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -66,6 +67,13 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
                 }
                 sendMessage("vibrate_left", "" + speed);
                 speedTextView.setText("" + speed);
+                (new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Intent i = new Intent(getApplicationContext(), HelpActivity.class);
+                        startActivity(i);
+                    }
+                })).start();
             }
         });
         rightButton = (Button) findViewById(R.id.button_right);
@@ -246,7 +254,6 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
 
         return super.onOptionsItemSelected(item);
     }
-
     private GoogleApiClient getGoogleApiClient(Context context) {
         return new GoogleApiClient.Builder(context)
                 .addApi(Wearable.API)
@@ -283,6 +290,7 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
             }).start();
         }
     }
+
 
     private void addLogMessage(String msg) {
         // append the new string

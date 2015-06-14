@@ -6,7 +6,8 @@ import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.TextView;
+import android.view.View;
+import android.widget.Button;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.wearable.Node;
@@ -17,91 +18,30 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 
-public class HelpActivity extends ActionBarActivity {
+public class NavigationActivity extends ActionBarActivity {
 
-    private String nodeId = null;
+    private Button stopButton;
+    private String nodeId;
     private Thread retrievingNodes;
-    private TextView textView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_help);
-        this.textView = (TextView) findViewById(R.id.this_is_text);
-        retrieveDeviceNode();
-        (new Thread(new Runnable() {
+        setContentView(R.layout.activity_navigation);
+        stopButton = (Button) findViewById(R.id.stop_routing);
+        stopButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void run() {
-                displayStuff();
-            }
-        })).start();
-
-    }
-
-    private void displayStuff(){
-        final Thread t2 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try{
-                    retrievingNodes.join(2000);
-                    setText("This is 'left'");
-                    sendMessage("left", "0.0");
-                    Thread.sleep(3500);
-                } catch (InterruptedException e){
-                }
+            public void onClick(View v) {
+                sendMessage("stop", "");
+                Intent i = new Intent(getApplicationContext(), MainActivity.class);
             }
         });
-        t2.start();
-        final Thread t3 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try{
-                    t2.join();
-                    sendMessage("stop", "");
-                    Thread.sleep(1000);
-                } catch (InterruptedException e){
-
-                }
-            }
-        });
-        final Thread t4 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try{
-                    t3.join();
-                    setText("This is 'right'");
-                    sendMessage("right", "0.0");
-                    Thread.sleep(3500);
-                    sendMessage("stop", "");
-                    setText("Enjoy you ride");
-                    Thread.sleep(1500);
-                } catch (InterruptedException e){
-
-                }
-            }
-        });
-        t4.start();
-        try{
-            t4.join();
-            Intent i = new Intent(getApplicationContext(), NavigationActivity.class);
-            startActivity(i);
-        } catch (InterruptedException e){}
-    }
-
-    private void setText(final String text){
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                HelpActivity.this.textView.setText(text);
-            }
-        });
-
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_help, menu);
+        getMenuInflater().inflate(R.menu.menu_navigation, menu);
         return true;
     }
 
@@ -120,7 +60,6 @@ public class HelpActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-
     private GoogleApiClient getGoogleApiClient(Context context) {
         return new GoogleApiClient.Builder(context)
                 .addApi(Wearable.API)
@@ -137,7 +76,7 @@ public class HelpActivity extends ActionBarActivity {
                         Wearable.NodeApi.getConnectedNodes(client).await();
                 List<Node> nodes = result.getNodes();
                 if (nodes.size() > 0) {
-                    HelpActivity.this.nodeId = nodes.get(0).getId();
+                    NavigationActivity.this.nodeId = nodes.get(0).getId();
                 }
                 client.disconnect();
             }
