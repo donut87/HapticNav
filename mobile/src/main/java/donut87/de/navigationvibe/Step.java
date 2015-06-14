@@ -5,12 +5,6 @@ import android.location.LocationManager;
 
 import java.util.Vector;
 
-enum StepDirection {
-    UNKNOWN,
-    LEFT,
-    RIGHT
-}
-
 /**
  * Created by nrj on 13/06/15.
  */
@@ -18,6 +12,7 @@ public class Step {
 
     public String instruction = "";
     public Location location = null;
+    public int currentVibrationProgress = -1;
 
     public Step(String instruction, double lat, double lng) {
         this.instruction = instruction;
@@ -26,13 +21,13 @@ public class Step {
         this.location.setLongitude(lng);
     }
 
-    public StepDirection direction() {
+    public String direction() {
         if (this.instruction.contains("<b>left</b>")) {
-            return StepDirection.LEFT;
+            return "left";
         }
         else if (this.instruction.contains("<b>right</b>")) {
-            return StepDirection.RIGHT;
+            return "right";
         }
-        return StepDirection.UNKNOWN;
+        return "stop";
     }
 }

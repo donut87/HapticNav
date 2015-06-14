@@ -19,7 +19,6 @@ import donut87.de.navigationvibe.Vibration.side;
 public class NavigatorActivity extends Activity {
 
     private TextView mTextView;
-    private side theSide = side.LEFT;
     private Vibration vibration;
 
     @Override

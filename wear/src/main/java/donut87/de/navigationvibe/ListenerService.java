@@ -13,12 +13,14 @@ import com.google.android.gms.wearable.WearableListenerService;
 public class ListenerService extends WearableListenerService {
     String lastMessage = "";
 
-    Vibration vibration;
+    private Vibration vibration;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        this.vibration = new Vibration((Vibrator) getSystemService(Context.VIBRATOR_SERVICE));
+        if (this.vibration == null) {
+            this.vibration = new Vibration((Vibrator) getSystemService(Context.VIBRATOR_SERVICE));
+        }
     }
 
     @Override

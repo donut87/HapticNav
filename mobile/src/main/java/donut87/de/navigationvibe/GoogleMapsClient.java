@@ -18,7 +18,7 @@ import java.util.Objects;
  */
 public class GoogleMapsClient implements ITaskHandler {
 
-    public static final String API_URL = "https://maps.googleapis.com/maps/api/directions/json?avoid=highways&mode=bicycling";
+    public static final String API_URL = "https://maps.googleapis.com/maps/api/directions/json?avoid=highways&mode=walking";
 
     private IGoogleMapsClientHandler handler;
 
@@ -50,15 +50,23 @@ public class GoogleMapsClient implements ITaskHandler {
                     JSONArray steps = firstLeg.getJSONArray("steps");
                     ArrayList<Step> retSteps = new ArrayList<Step>();
 
-                    for (int i = 0; i < steps.length(); i++) {
+                    if (steps.length() > 1) {
 
-                        JSONObject s = steps.getJSONObject(i);
-                        JSONObject coord = s.getJSONObject("end_location");
-                        String instruction = s.getString("html_instructions");
-                        retSteps.add(new Step(instruction, coord.getDouble("lat"), coord.getDouble("lng")));
+                        for (int i = 1; i < steps.length(); i++) {
+
+                            JSONObject s = steps.getJSONObject(i);
+                            JSONObject prev = steps.getJSONObject(i - 1);
+                            JSONObject coord = prev.getJSONObject("end_location");
+                            String instruction = s.getString("html_instructions");
+                            retSteps.add(new Step(instruction, coord.getDouble("lat"), coord.getDouble("lng")));
+                        }
+
+                        handler.onReceiveDirections(retSteps, null);
                     }
+                    else {
 
-                    handler.onReceiveDirections(retSteps, null);
+                        handler.onReceiveDirections(null, new Error("No route found."));
+                    }
                 }
                 else {
 

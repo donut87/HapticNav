@@ -50,6 +50,7 @@ public class Vibration {
     }
 
     public void stopVibrating() {
+
         vibrator.cancel();
     }
 

@@ -36,7 +36,8 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
     private LocationManager locationManager;
     private LocationListener locationListener;
     private Location currentLocation;
-    private Location currentGoalLocation;
+    private ArrayList<Step>navigationSteps;;
+
     private TextView textView;
     private Button leftButton;
     private Button rightButton;
@@ -51,7 +52,7 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
         super.onCreate(savedInstanceState);
         this.retrieveDeviceNode();
         setContentView(R.layout.activity_main);
-        textView = (TextView) findViewById(R.id.textView);
+        sendMessage("stop", "");
         speedTextView = (TextView) findViewById(R.id.speed_label);
         leftButton = (Button) findViewById(R.id.button_left);
         leftButton.setOnClickListener(new View.OnClickListener() {
@@ -60,9 +61,8 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
                 double speed = Double.parseDouble(speedTextView.getText().toString());
                 if (speed == -1.0 || speed >= 1.0) {
                     speed = 0.0;
-                }
-                else {
-                    speed += 0.1;
+                } else {
+                    speed += 0.5;
                 }
                 sendMessage("vibrate_left", "" + speed);
                 speedTextView.setText("" + speed);
@@ -77,7 +77,7 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
                     speed = 0.0;
                 }
                 else {
-                    speed += 0.1;
+                    speed += 0.5;
                 }
                 sendMessage("vibrate_right", "" + speed);
                 speedTextView.setText("" + speed);
@@ -91,38 +91,65 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
                 speedTextView.setText("-1.0");
             }
         });
-        textView.setMovementMethod(new ScrollingMovementMethod());
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
 
-                textView.append("Your Location: " + location.getLatitude() + ", " + location.getLongitude() + "\n");
-                Log.d("Location", "Lat " + location.getLatitude() + " Lon " + location.getLongitude());
+                if (navigationSteps.size() == 0) {
+
+                    sendMessage("stop", "");
+                    return;
+                }
 
                 if (currentLocation != null) {
 
-                    double travelDiffX = currentLocation.getLatitude() - location.getLatitude();
-                    double travelDiffY = currentLocation.getLongitude() - location.getLongitude();
-                    Vector2 travelDiff = new Vector2(travelDiffX, travelDiffY);
-                    Vector2 travelNorm = travelDiff.normalized();
-                    double travelDirection = Math.toDegrees(Math.atan2(travelNorm.y, travelNorm.x));
+                    Step nextStep = navigationSteps.get(0);
 
-                    double goalDiffX = currentGoalLocation.getLatitude() - location.getLatitude();
-                    double goalDiffY = currentGoalLocation.getLongitude() - location.getLongitude();
-                    Vector2 goalDiff = new Vector2(goalDiffX, goalDiffY);
-                    Vector2 goalNorm = goalDiff.normalized();
-                    double goalDirection = Math.toDegrees(Math.atan2(goalNorm.y, goalNorm.x));
+                    double distanceToCurrentGoalInMeters = location.distanceTo(nextStep.location);
 
-//                    double differenceInDirection = Math.abs(goalDirection - travelDirection);
+                    addLogMessage("Distance to turn: " + Math.floor(distanceToCurrentGoalInMeters) + " M");
 
-                    double distanceToCurrentGoalInMeters = location.distanceTo(currentGoalLocation);
+                    if (distanceToCurrentGoalInMeters <= 50.0 && nextStep.currentVibrationProgress < 0) {
 
-                    textView.append("Distance to goal: " + distanceToCurrentGoalInMeters + " M");
+                        nextStep.currentVibrationProgress = 0;
+                        sendMessage("vibrate_" + nextStep.direction(), "0.0");
+                        addLogMessage("Turn " + nextStep.direction() + " ahead.");
+                    }
+                    else if (distanceToCurrentGoalInMeters <= 25.0 && nextStep.currentVibrationProgress < 1) {
 
-                    if (distanceToCurrentGoalInMeters <= 5.0) {
+                        nextStep.currentVibrationProgress = 1;
+                        sendMessage("vibrate_" + nextStep.direction(), "0.5");
+                        addLogMessage("Turn " + nextStep.direction() + " ahead.");
+                    }
+                    else if (distanceToCurrentGoalInMeters <= 15.0 && nextStep.currentVibrationProgress < 2) {
 
-                        textView.append("You made it!");
+                        nextStep.currentVibrationProgress = 2;
+                        sendMessage("vibrate_" + nextStep.direction(), "1.0");
+                        addLogMessage("Turn " + nextStep.direction() + " ahead.");
+                    }
+                    else if (distanceToCurrentGoalInMeters <= 5.0 && nextStep.currentVibrationProgress < 3) {
+
+                        nextStep.currentVibrationProgress = 3;
+                        sendMessage("stop", "");
+                    }
+                    else if (distanceToCurrentGoalInMeters <= 5.0 && nextStep.currentVibrationProgress < 4) {
+
+                        nextStep.currentVibrationProgress = 4;
+                        sendMessage("stop", "");
+
+                        if (navigationSteps.size() > 1) {
+
+                            navigationSteps.remove(0);
+
+                            addLogMessage(navigationSteps.get(0).instruction);
+                        }
+                        else if (navigationSteps.size() == 1) {
+
+                            navigationSteps.remove(0);
+
+                            addLogMessage("You're at your destination!");
+                        }
                     }
                 }
 
@@ -132,34 +159,29 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
             @Override
             public void onStatusChanged(String provider, int status, Bundle extras) {
 
-                textView.append("Status " + provider + " " + status + "\n");
-                Log.d("Status", provider + " " + status);
+                addLogMessage("Status " + provider + " " + status);
             }
 
             @Override
             public void onProviderEnabled(String provider) {
 
-                textView.append("Enabled" + provider + "\n");
-                Log.d("Enabled", provider);
+                addLogMessage("Enabled" + provider);
             }
 
             @Override
             public void onProviderDisabled(String provider) {
 
-                textView.append("Disabled" + provider + "\n");
-                Log.d("Disabled", provider);
+                addLogMessage("Disabled" + provider);
             }
         };
 
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1, Criteria.ACCURACY_FINE, locationListener);
         currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         if (currentLocation != null) {
-            textView.setText("Your Location: " + currentLocation.getLatitude() + ", " + currentLocation.getLongitude() + "\n");
-            Log.d("Location", "Cur Lat " + currentLocation.getLatitude() + "Cur Lon " + currentLocation.getLongitude());
+            addLogMessage("Your Location: " + currentLocation.getLatitude() + ", " + currentLocation.getLongitude());
         }
         else {
-            textView.setText("Current Location Unknown\n");
-            Log.d("Location", "Current Location Unknown");
+            addLogMessage("Current Location Unknown");
         }
         handleNavigationSearchButton();
     }
@@ -172,11 +194,11 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
         }
         try {
 
-            client.getDirections("Windscheidstrasse 18, Berlin, Germany", "Stuttgarter Pl. 21, Berlin, Germany");
+            client.getDirections("Windscheidstrasse 18, Berlin, Germany", "Friedbergstraße 7, 14057 Berlin");
         }
         catch (IOException e) {
 
-            Log.e("Error", e.getMessage());
+            addLogMessage("Error: " + e.getMessage());
         }
     }
 
@@ -184,21 +206,22 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
 
         if (error == null) {
 
-            Step firstStep = steps.get(1);
+            addLogMessage("Route computed!");
+            Step firstStep = steps.get(0);
+            addLogMessage(firstStep.instruction);
+            steps.remove(0);
+            navigationSteps = steps;
+            Step nextStep = steps.get(0);
+            addLogMessage("Next goal is: " + nextStep.location.getLatitude() + ", " + nextStep.location.getLongitude());
 
-            /*
+            for (int i = 0; i < steps.size(); i++) {
 
-            currentGoalLocation = new Location(LocationManager.GPS_PROVIDER);
-            currentGoalLocation.setLatitude(firstStep.location.coordinate.x);
-            currentGoalLocation.setLongitude(firstStep.coordinate.y);
-
-            */
-
-            textView.append("Next goal is: " + currentGoalLocation.getLatitude() + ", " + currentGoalLocation.getLongitude());
+                Log.i("" + i, steps.get(i).instruction);
+            }
         }
         else {
 
-            Log.e("Error", error.getMessage());
+            addLogMessage("Error: " + error.getMessage());
         }
     }
 
@@ -260,40 +283,14 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
             }).start();
         }
     }
+
+    private void addLogMessage(String msg) {
+        // append the new string
+        if (textView == null) {
+            textView = (TextView) findViewById(R.id.textView);
+            textView.setMovementMethod(new ScrollingMovementMethod());
+        }
+        textView.append(msg + "\n");
+        Log.i("INFO", msg);
+    }
 }
-
-
-        /*
-        52.50599976, 13.29747649
-52.50600543, 13.29746742
-52.50593616, 13.29752356
-525059909  , 13.29751055
-5250600051 , 13.29751699
-52.5059302 , 13.29776906
-52.50593219, 13.29793243
-52.50539013, 13.29312255
-5250539354 , 13.29320313
-5250590696 , 13.29322133
-52.5059113 , 13.29325332
-52.50591503, 13.29330779
-5250590707 , 13.29342336
-5250534534 , 13.29351452
-5250532337 , 13.29356315
-5250573504 , 13.29356253
-5250574037 , 13.29357316
-5250573914 , 13.29363529
-5250576956 , 13.29333237
-5250534092 , 13.29394637
-5250539293 , 13.29900343
-5250592395 , 13.29909031
-5250597676 , 13.29912744
-5250604436 , 13.29913107
-5250606705 , 13.2992724
-5250609494 , 13.29934266
-52.50610521, 13.2993447
-52.50616797, 13.29937394
-52.50615455, 13.29940432
-52.50616326, 13.2994146
-52.50609715, 13.29951733
-5250606379 , 13.29951359
-         */
