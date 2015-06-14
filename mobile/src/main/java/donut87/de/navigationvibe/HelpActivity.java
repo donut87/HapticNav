@@ -38,54 +38,37 @@ public class HelpActivity extends ActionBarActivity {
 
     }
 
-    private void displayStuff(){
+    private void displayStuff() {
         final Thread t2 = new Thread(new Runnable() {
             @Override
             public void run() {
-                try{
+                try {
                     retrievingNodes.join(2000);
                     setText("This is 'left'");
                     sendMessage("left", "0.0");
                     Thread.sleep(3500);
-                } catch (InterruptedException e){
-                }
-            }
-        });
-        t2.start();
-        final Thread t3 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try{
-                    t2.join();
                     sendMessage("stop", "");
                     Thread.sleep(1000);
-                } catch (InterruptedException e){
-
-                }
-            }
-        });
-        final Thread t4 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try{
-                    t3.join();
                     setText("This is 'right'");
                     sendMessage("right", "0.0");
                     Thread.sleep(3500);
                     sendMessage("stop", "");
                     setText("Enjoy you ride");
                     Thread.sleep(1500);
-                } catch (InterruptedException e){
-
+                    Intent old = getIntent();
+                    String activity = old.getStringExtra("Activity");
+                    Intent i = null;
+                    if(activity != null && activity.equals("Demo")){
+                        i = new Intent(getApplicationContext(), DemoActivity.class);
+                    } else {
+                        i = new Intent(getApplicationContext(), NavigationActivity.class);
+                    }
+                    startActivity(i);
+                } catch (InterruptedException e) {
                 }
             }
         });
-        t4.start();
-        try{
-            t4.join();
-            Intent i = new Intent(getApplicationContext(), NavigationActivity.class);
-            startActivity(i);
-        } catch (InterruptedException e){}
+        t2.start();
     }
 
     private void setText(final String text){

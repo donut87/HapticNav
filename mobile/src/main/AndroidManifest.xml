@@ -34,6 +34,14 @@
             android:name=".NavigationActivity"
             android:label="@string/title_activity_navigation" >
         </activity>
+        <activity
+            android:name=".RatingActivity"
+            android:label="@string/title_activity_rating" >
+        </activity>
+        <activity
+            android:name=".DemoActivity"
+            android:label="@string/title_activity_demo" >
+        </activity>
     </application>
 
 </manifest>

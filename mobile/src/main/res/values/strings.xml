@@ -7,4 +7,6 @@
     <string name="title_activity_help">HelpActivity</string>
     <string name="title_activity_navigation">NavigationActivity</string>
     <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_rating">RatingActivity</string>
+    <string name="title_activity_demo">DemoActivity</string>
 </resources>

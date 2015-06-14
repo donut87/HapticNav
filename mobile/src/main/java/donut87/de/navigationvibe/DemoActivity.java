@@ -6,8 +6,7 @@ import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
+import android.widget.TextView;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.wearable.Node;
@@ -18,31 +17,66 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 
-public class NavigationActivity extends ActionBarActivity {
+public class DemoActivity extends ActionBarActivity {
 
-    private Button stopButton;
-    private String nodeId;
-    private Thread retrievingNodes;
+    Thread retrievingNodes;
+    String nodeId;
+    TextView textView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_navigation);
-        stopButton = (Button) findViewById(R.id.stop_routing);
-        stopButton.setOnClickListener(new View.OnClickListener() {
+        setContentView(R.layout.activity_demo);
+        startDemo();
+    }
+
+    private void startDemo(){
+        Thread t1 = new Thread(new Runnable() {
             @Override
-            public void onClick(View v) {
-                sendMessage("stop", "");
-                Intent i = new Intent(getApplicationContext(), RatingActivity.class);
-                startActivity(i);
+            public void run() {
+                try{
+                    Thread.sleep(5000);
+                    sendMessage("left", "0.0");
+                    Thread.sleep(2000);
+                    sendMessage("left", "0.3");
+                    Thread.sleep(2000);
+                    sendMessage("left", "0.6");
+                    Thread.sleep(2000);
+                    sendMessage("left", "1.0");
+                    Thread.sleep(2000);
+                    sendMessage("stop", "");
+                    Thread.sleep(6000);
+                    sendMessage("right", "0.0");
+                    Thread.sleep(2000);
+                    sendMessage("right", "0.3");
+                    Thread.sleep(2000);
+                    sendMessage("right", "0.6");
+                    Thread.sleep(2000);
+                    sendMessage("right", "1.0");
+                    Thread.sleep(6000);
+                    sendMessage("stop", "");
+                    sendMessage("left", "0.0");
+                    Thread.sleep(1500);
+                    sendMessage("left", "0.3");
+                    Thread.sleep(1500);
+                    sendMessage("left", "0.6");
+                    Thread.sleep(1500);
+                    sendMessage("left", "1.0");
+                    Thread.sleep(1500);
+                    sendMessage("stop", "");
+                    Thread.sleep(2000);
+                    Intent i = new Intent(getApplicationContext(), RatingActivity.class);
+                    startActivity(i);
+                } catch (InterruptedException e){}
             }
         });
+        t1.start();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_navigation, menu);
+        getMenuInflater().inflate(R.menu.menu_demo, menu);
         return true;
     }
 
@@ -77,7 +111,7 @@ public class NavigationActivity extends ActionBarActivity {
                         Wearable.NodeApi.getConnectedNodes(client).await();
                 List<Node> nodes = result.getNodes();
                 if (nodes.size() > 0) {
-                    NavigationActivity.this.nodeId = nodes.get(0).getId();
+                    DemoActivity.this.nodeId = nodes.get(0).getId();
                 }
                 client.disconnect();
             }
@@ -97,5 +131,15 @@ public class NavigationActivity extends ActionBarActivity {
                 }
             }).start();
         }
+    }
+
+    private void setText(final String text){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                DemoActivity.this.textView.setText(text);
+            }
+        });
+
     }
 }

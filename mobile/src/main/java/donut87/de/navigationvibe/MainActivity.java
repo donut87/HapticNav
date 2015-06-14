@@ -43,6 +43,7 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
     private Button leftButton;
     private Button rightButton;
     private Button buttonStop;
+    private Button demoButton;
     private TextView speedTextView;
     private String nodeId;
 
@@ -55,6 +56,20 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
         setContentView(R.layout.activity_main);
         sendMessage("stop", "");
         speedTextView = (TextView) findViewById(R.id.speed_label);
+        demoButton = (Button) findViewById(R.id.demo_button);
+        demoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                (new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Intent i = new Intent(getApplicationContext(), HelpActivity.class);
+                        i.putExtra("Activity", "Demo");
+                        startActivity(i);
+                    }
+                })).start();
+            }
+        });
         leftButton = (Button) findViewById(R.id.button_left);
         leftButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -67,13 +82,6 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
                 }
                 sendMessage("vibrate_left", "" + speed);
                 speedTextView.setText("" + speed);
-                (new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Intent i = new Intent(getApplicationContext(), HelpActivity.class);
-                        startActivity(i);
-                    }
-                })).start();
             }
         });
         rightButton = (Button) findViewById(R.id.button_right);
