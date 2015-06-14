@@ -186,9 +186,13 @@ public class MainActivity extends ActionBarActivity implements IGoogleMapsClient
 
             Step firstStep = steps.get(1);
 
+            /*
+
             currentGoalLocation = new Location(LocationManager.GPS_PROVIDER);
-            currentGoalLocation.setLatitude(firstStep.coordinate.x);
+            currentGoalLocation.setLatitude(firstStep.location.coordinate.x);
             currentGoalLocation.setLongitude(firstStep.coordinate.y);
+
+            */
 
             textView.append("Next goal is: " + currentGoalLocation.getLatitude() + ", " + currentGoalLocation.getLongitude());
         }

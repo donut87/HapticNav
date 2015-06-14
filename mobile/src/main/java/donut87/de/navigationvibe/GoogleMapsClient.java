@@ -54,10 +54,8 @@ public class GoogleMapsClient implements ITaskHandler {
 
                         JSONObject s = steps.getJSONObject(i);
                         JSONObject coord = s.getJSONObject("end_location");
-                        Vector2 coordVector = new Vector2(coord.getDouble("lat"), coord.getDouble("lng"));
                         String instruction = s.getString("html_instructions");
-                        retSteps.add(new Step(instruction, coordVector));
-                        Log.i("" + i, instruction + " " + coordVector.x + " " + coordVector.y);
+                        retSteps.add(new Step(instruction, coord.getDouble("lat"), coord.getDouble("lng")));
                     }
 
                     handler.onReceiveDirections(retSteps, null);

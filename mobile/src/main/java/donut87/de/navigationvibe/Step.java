@@ -1,5 +1,8 @@
 package donut87.de.navigationvibe;
 
+import android.location.Location;
+import android.location.LocationManager;
+
 import java.util.Vector;
 
 enum StepDirection {
@@ -14,11 +17,13 @@ enum StepDirection {
 public class Step {
 
     public String instruction = "";
-    public Vector2 coordinate = new Vector2(0.0, 0.0);
+    public Location location = null;
 
-    public Step(String instruction, Vector2 coordinate) {
+    public Step(String instruction, double lat, double lng) {
         this.instruction = instruction;
-        this.coordinate = coordinate;
+        this.location = new Location(LocationManager.GPS_PROVIDER);
+        this.location.setLatitude(lat);
+        this.location.setLongitude(lng);
     }
 
     public StepDirection direction() {
